@@ -1,0 +1,118 @@
+let fs = require("fs");
+let puppeteer = require('puppeteer');
+
+// arr has all the account numbers in an array
+// cfile has the credentials 
+// arr and cfile are confidential
+
+let cfile = process.argv[2];
+
+(async function () {
+    const browser = await puppeteer.launch({
+        headless: false,
+        defaultViewport: null,
+        slowMo: 10,
+        args: ['--start-maximized', '--disable-notifications', '--print-to-pdf']
+    });
+
+    let contents = await fs.promises.readFile(cfile, 'utf-8');
+    let obj = JSON.parse(contents);
+    let user = obj.user;
+    let pwd = obj.pwd;
+    let url = obj.url;
+
+    let pages = await browser.pages();
+    let page = pages[0];
+
+
+    // await page.goto('chrome://settings/content/pdfDocuments?search=pdf', {
+    //     waitUntil: 'load'
+    // });    
+    // await page.waitForSelector("settings-subpage #bar");
+    // await page.click("settings-subpage #knob");
+
+    page.goto(url, {
+        waitUntil: 'networkidle0'
+    });
+    await page.waitForSelector('#loginButton', {
+        visible: true
+    });
+
+    await page.type('#form-field-login-main-username', user);
+    await page.type('#form-field-login-main-password', pwd);
+    await page.click("#loginButton");
+    // await page.waitForNavigation({ waitUntil: 'networkidle0' });
+
+    let len = arr.length
+
+    for (let i = 0; i < len; i++) {
+        let temp = arr[i].toString()
+        let aurl = "https://www.dewa.gov.ae/en/consumer/my-account/bills-and-payments/transaction-history?a="
+        await page.goto(aurl + temp, {
+            waitUntil: 'networkidle0'
+        });
+        await page.bringToFront();
+
+
+
+        await page.waitForSelector(".button.button--primary.button--next.button--very_small", {
+            visible: true
+        });
+
+        
+
+        const hrefs1 = await page.evaluate(
+            () => Array.from(
+                document.querySelectorAll('a.button.button--primary.button--next.button--very_small[href]'),
+                a => a.getAttribute('href')
+            )
+        );            
+
+        let hreftag = hrefs1[0].toString()
+        let temp_url = "https://www.dewa.gov.ae"
+        console.log(temp_url)
+        console.log(hreftag)
+        await page.goto(temp_url + hreftag);
+
+        await page.bringToFront();
+
+
+        // This makes a pdf out of the current page
+        // It only works in headless mode
+        // The issue I think is that in headless mode the third link is not opening up because it isnt known 
+        // that it is coming from the previous page
+        // await page.pdf({ path: 'overview.pdf' });         
+
+
+        // let pdf = await page.pdf({path: 'bill + ' + i.toString() + '.pdf', format: 'A4'});
+        // console.log(pdf.length)
+
+
+        // Open the bill in a new tab
+        // let manage = await page2.$$("a.button.button--primary.button--next.button--very_small")
+        // await manage[0].click({
+        //     waitUntil: 'networkidle0'
+        // });        
+
+
+
+        // headless : true then this command downloads the current page as a pdf
+
+        // console.log(pdf.length)
+
+        // href
+        // /api/billdownloads/100040528936
+
+
+
+        // let abc = await browser.pages();
+
+        // console.log(page2.url())
+        // console.log(pages.length);
+        // console.log(abc.length)
+        // console.log(abc[1])
+
+        // console.log(pages[0].url())
+        // console.log(pages[1].url())        
+    }
+})()
